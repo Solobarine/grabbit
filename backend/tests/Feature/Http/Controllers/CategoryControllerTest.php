@@ -78,6 +78,25 @@ it('cannot store category without required fields', function () {
         ]);
 });
 
+it('cannot store category without Authorization', function () {
+    // Arrange
+    $data = [
+        'name' => 'New Category',
+        'image' => UploadedFile::fake()->image('category.jpg')
+    ];
+
+    // Act
+    $response = $this->postJson('/api/categories', $data);
+
+    // Assert
+    $response->assertStatus(403)
+        ->assertJsonStructure([
+            'status',
+            'error',
+        ]);
+});
+
+
 it('can show a category', function () {
     // Arrange
     $category = Category::factory()->create();
@@ -125,6 +144,25 @@ it('can update a category', function () {
     ]);
 });
 
+it('cannot update a category without Authorization', function () {
+    // Arrange
+    $category = Category::factory()->create();
+    $data = [
+        'name' => 'Updated Category',
+    ];
+
+    // Act
+    $response = $this->patchJson("/api/categories/{$category->id}", $data);
+
+    // Assert
+    $response->assertStatus(403)
+        ->assertJsonStructure([
+            'status',
+            'error'
+        ]);
+});
+
+
 it('can update a category image', function () {
     $user = User::factory()->create(['role' => 'admin']);
     $token = auth()->attempt(['email' => $user->email, 'password' => 'password']);
@@ -148,6 +186,24 @@ it('can update a category image', function () {
     Storage::assertExists($response->json('category.image'));
 });
 
+it('cannot update a category image without Authorization', function () {
+    Storage::fake('local');
+
+    // Arrange
+    $category = Category::factory()->create();
+    $image = UploadedFile::fake()->image('new-image.jpg');
+
+    // Act
+    $response = $this->patchJson("/api/categories/{$category->id}/update-image", ['image' => $image]);
+
+    // Assert
+    $response->assertStatus(403)
+        ->assertJsonStructure([
+            'status',
+            'error'
+        ]);
+});
+
 it('can delete a category', function () {
     $user = User::factory()->create(['role' => 'admin']);
     $token = auth()->attempt(['email' => $user->email, 'password' => 'password']);
@@ -168,4 +224,19 @@ it('can delete a category', function () {
         ]);
 
     $this->assertDatabaseMissing($category);
+});
+
+it('cannot delete a category without Authorization', function () {
+    // Arrange
+    $category = Category::factory()->create();
+
+    // Act
+    $response = $this->deleteJson("/api/categories/{$category->id}");
+
+    // Assert
+    $response->assertStatus(403)
+        ->assertJsonStructure([
+            'status',
+            'error'
+        ]);
 });
