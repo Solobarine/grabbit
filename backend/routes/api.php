@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CartItemController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\ProductOptionController;
 use App\Http\Middleware\Admin;
+use App\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,4 +49,15 @@ Route::controller(ProductOptionController::class)->middleware(['api', Admin::cla
     Route::post('/product-options', 'store');
     Route::patch('/product-options/{productOption}', 'update');
     Route::delete('/product-options/{productOption}', 'destroy');
+});
+
+Route::controller(CartController::class)->middleware('api')->group(function () {
+    Route::delete("/cart/{cart}", 'destroy')->middleware('can:destroy,cart');
+});
+
+Route::controller(CartItemController::class)->middleware('api')->group(function () {
+    Route::patch('/cart-items/{cartItem}', 'update')->middleware('can:update,cartItem');
+    Route::patch('/cart-items/{cartItem}/quantity', 'updateQuantity')->middleware('can:updateQuantity,cartItem');
+    Route::post('/cart-items', 'addItemToCart');
+    Route::delete('/cart-items/{cartItem}', 'removeItemFromCart')->middleware('can:removeItemFromCart,cartItem');
 });
